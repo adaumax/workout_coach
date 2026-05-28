@@ -13,7 +13,7 @@ Update this file at the end of every session before closing.
 ## Current Status
 
 **Active step:** None — not started yet
-**Last session:** Spec updated for freemium model, mobile App Store/Play Store distribution, and Capacitor + RevenueCat integration
+**Last session:** Dropped iOS/Android native distribution — project is now a PWA-only responsive web app. Removed Capacitor, RevenueCat, and store submission steps. Stripe is the only payment provider.
 **Next action:** Verify Node.js and Python versions, then scaffold the project (Step 1)
 
 ---
@@ -207,20 +207,20 @@ profile management, data export, and account deletion.
 
 ---
 
-### Step 10 — Freemium: Subscription Model + Premium Gates
+### Step 10 — Freemium: Subscription Model + Stripe + Premium Gates
 **Status:** ⬜ Todo
 
-**Goal:** Implement RevenueCat, connect subscription status to feature gates,
+**Goal:** Implement Stripe, connect subscription status to feature gates,
 build the `/subscription` page.
 
 **Definition of done:**
-- RevenueCat account created, products defined (monthly, yearly)
-- `POST /subscription/verify` validates Apple/Google receipt via RevenueCat
-- `POST /subscription/webhook/revenuecat` syncs subscription status to DB
+- Stripe account configured with monthly and yearly price IDs
+- `POST /subscription/webhook/stripe` handles subscription lifecycle events (created, updated, deleted)
+- Checkout flow on `/subscription` page (Stripe Checkout)
 - `require_premium` FastAPI dependency created and applied to all premium endpoints
 - All premium features return HTTP 402 (with a descriptive message) for free users
 - `/subscription` page shows: current plan, pricing table, upgrade/cancel flow
-- Premium activates instantly after payment across all devices
+- Premium activates instantly after payment
 - Cancellation takes effect at period end; data is never deleted on cancel
 
 **Key decisions:** —
@@ -229,31 +229,13 @@ build the `/subscription` page.
 
 ---
 
-### Step 11 — Stripe Web Payments
-**Status:** ⬜ Todo
-
-**Goal:** Allow users to subscribe via the web using Stripe.
-
-**Definition of done:**
-- Stripe account configured with monthly and yearly price IDs
-- `POST /subscription/webhook/stripe` handles subscription lifecycle events
-- Checkout flow on `/subscription` page (Stripe Checkout or embedded)
-- Subscription status synced to `subscription` table via webhook
-- RevenueCat notified of Stripe subscriptions for unified entitlement management
-
-**Key decisions:** —
-**Files created:** —
-**Notes:** —
-
----
-
-### Step 12 — Offline Mode (Premium)
+### Step 11 — Offline Mode (Premium)
 **Status:** ⬜ Todo
 
 **Goal:** PWA service worker enables offline session logging for premium users.
 
 **Definition of done:**
-- Service worker caches the session page and exercise library
+- next-pwa configured; service worker caches the session page and exercise library
 - Sets logged offline are queued in IndexedDB
 - Queue is synced automatically when connection is restored
 - Offline mode only activates for premium users (checked before caching)
@@ -265,49 +247,7 @@ build the `/subscription` page.
 
 ---
 
-### Step 13 — Capacitor: iOS + Android Packaging
-**Status:** ⬜ Todo
-
-**Goal:** Wrap the Next.js app with Capacitor and build for iOS and Android.
-
-**Definition of done:**
-- Capacitor installed and configured (`capacitor.config.ts`)
-- `ios/` and `android/` folders generated
-- App builds and runs on iOS Simulator and Android Emulator
-- RevenueCat iOS and Android SDKs integrated
-- Haptic feedback on key actions (set logged, rest timer done)
-- App icon and splash screen configured
-- `capacitor://localhost` added to CORS allowed origins in backend
-
-**Key decisions:** —
-**Files created:** —
-**Notes:** —
-
----
-
-### Step 14 — App Store & Play Store Submission
-**Status:** ⬜ Todo
-
-**Goal:** Publish to Apple App Store and Google Play Store.
-
-**Definition of done:**
-- Apple Developer account active (99 USD/year)
-- Google Play Developer account active (25 USD one-time)
-- App signed for iOS (provisioning profile + distribution certificate)
-- App signed for Android (release keystore)
-- Privacy policy URL (`/privacy`) included in both store listings
-- App Store screenshots prepared (at least iPhone + iPad)
-- Play Store screenshots prepared
-- Age rating completed (both stores)
-- App submitted and approved
-
-**Key decisions:** —
-**Files created:** —
-**Notes:** —
-
----
-
-### Step 15 — Nutrition Advice (Premium)
+### Step 12 — Nutrition Advice (Premium)
 **Status:** ⬜ Todo
 
 **Goal:** Claude-powered nutrition advice tailored to goal and training load.
@@ -332,9 +272,8 @@ build the `/subscription` page.
 | 2026-05-28 | FastAPI (Python) backend | User preference + great for AI |
 | 2026-05-28 | Supabase for DB + Auth | Managed Postgres, RLS, built-in auth, free tier |
 | 2026-05-28 | Supabase Auth email/password only | Simplest GDPR-compliant auth; OAuth deferred |
-| 2026-05-28 | Capacitor for mobile | One codebase for web + iOS + Android |
-| 2026-05-28 | RevenueCat for IAP | Normalizes Apple + Google APIs; industry standard |
-| 2026-05-28 | Stripe for web payments | Lower fees than App Store/Play Store (2.9% vs 30%) |
+| 2026-05-28 | PWA-only — no native app stores | Ship faster; avoid App Store fees and review delays; revisit later |
+| 2026-05-28 | Stripe only (no RevenueCat) | No mobile IAP needed; Stripe handles all web subscriptions |
 | 2026-05-28 | Hard delete on account removal | GDPR right to erasure |
 | 2026-05-28 | Data export always free | GDPR Article 20 — legal right, cannot be paywalled |
 | 2026-05-28 | Core session logging free | Free tier must be genuinely useful to drive adoption |
@@ -347,7 +286,5 @@ build the `/subscription` page.
 
 - Confirm Node.js 18+ and Python 3.11+ installed
 - Supabase account needed (free tier) — https://supabase.com
-- Anthropic API key needed for Steps 9 and 15 (can be skipped and added later)
-- RevenueCat account needed for Step 10 — https://revenuecat.com (free tier available)
-- Stripe account needed for Step 11 — https://stripe.com
-- Apple Developer account (99 USD/year) and Google Play account (25 USD one-time) needed for Step 14
+- Anthropic API key needed for Steps 9 and 12 (can be skipped and added later)
+- Stripe account needed for Step 10 — https://stripe.com

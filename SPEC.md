@@ -2,41 +2,31 @@
 
 ## 1. What it is
 
-A multi-user indoor muscle workout tracker available on three surfaces:
-- **Web** (Progressive Web App, runs in any browser)
-- **iOS** (App Store, packaged with Capacitor)
-- **Android** (Play Store, packaged with Capacitor)
+A multi-user indoor muscle workout tracker available as a **Progressive Web App**:
+- Runs in any browser on desktop, tablet, and mobile
+- Installable on the home screen on iOS and Android via the browser (no app stores)
+- Fully responsive — designed mobile-first, great on desktop too
 
 The app follows a **freemium model**: core features are free, advanced features
 (AI, full history, charts, offline) require a paid subscription.
 Pedagogical by design: every feature teaches the user something about training and health.
 
+> **Out of scope for now:** native iOS App Store and Android Play Store distribution.
+> This may be revisited later once the web app is stable and has users.
+
 ---
 
 ## 2. Tech Stack
 
-| Layer              | Technology                                      |
-|--------------------|-------------------------------------------------|
-| Frontend / Web     | Next.js 14 + React + Tailwind CSS               |
-| Mobile packaging   | Capacitor (wraps the web app for iOS + Android) |
-| Backend            | FastAPI (Python 3.11+)                          |
-| Database           | Supabase (PostgreSQL + Row-Level Security)      |
-| Auth               | Supabase Auth (JWT, email/password)             |
-| AI                 | Claude API (anthropic Python SDK)               |
-| In-App Purchases   | RevenueCat (normalizes Apple + Google IAP)      |
-| Web payments       | Stripe (for subscriptions via the web)          |
-
-### Why Capacitor?
-Capacitor wraps the existing Next.js web app into a native iOS and Android shell.
-There is **one codebase** — not two separate mobile apps. The same UI, logic, and
-components run everywhere. Capacitor also provides plugins for native APIs
-(push notifications, haptics, camera) when needed later.
-
-### Why RevenueCat?
-Apple App Store and Google Play each have completely different In-App Purchase APIs.
-RevenueCat provides a single SDK and backend that normalizes both, handles receipt
-validation, manages entitlements (free vs premium), and integrates with Stripe
-for web payments. It is the industry standard for freemium mobile apps.
+| Layer          | Technology                                 |
+|----------------|--------------------------------------------|
+| Frontend       | Next.js 14 + React + Tailwind CSS          |
+| PWA            | next-pwa (service worker, installable)     |
+| Backend        | FastAPI (Python 3.11+)                     |
+| Database       | Supabase (PostgreSQL + Row-Level Security) |
+| Auth           | Supabase Auth (JWT, email/password)        |
+| AI             | Claude API (anthropic Python SDK)          |
+| Payments       | Stripe (subscriptions, web only)           |
 
 ---
 
@@ -73,16 +63,6 @@ offline mobile experience.
 - **Free**: always free
 - **Premium monthly**: ~4.99 €/month
 - **Premium yearly**: ~39.99 €/year (~33% discount)
-
-### Store rules
-- Apple App Store takes **30%** of IAP revenue (15% after year 1 for small developers).
-- Google Play takes **30%** (15% after year 1).
-- Apple **requires** IAP for any digital goods sold inside an iOS app. You cannot
-  link to an external payment page from inside the iOS app.
-- Apple **requires** "Sign in with Apple" if any third-party OAuth is offered.
-  Since we use email/password only, this rule does not apply for now.
-- A **Privacy Policy URL** is mandatory for App Store and Play Store submission.
-  Our `/privacy` page satisfies this requirement.
 
 ---
 
@@ -123,12 +103,12 @@ These apply to every feature. Every piece of code must satisfy them.
 - Loading states on every async action (spinner or skeleton).
 - Human-readable, actionable error messages — never raw error codes.
 - Confirmation dialogs before any destructive action.
-- Native mobile feel on iOS and Android via Capacitor (smooth scrolling, haptic feedback on key actions).
+- Smooth scrolling and touch-friendly interactions on mobile browsers.
 
 ### 4.4 Reliability & Failovers
 
 - **Optimistic UI**: set logging updates immediately, rolls back on failure.
-- **Offline support** (premium): session page works offline, sets queued and synced on reconnect.
+- **Offline support** (premium): session page works offline via PWA service worker, sets queued and synced on reconnect.
 - **Retry logic**: all frontend API calls retry up to 3 times with exponential backoff.
 - **Graceful degradation**: AI unavailable → show last cached advice with a warning.
 - **Health endpoint**: `GET /health` returns backend and database status.
@@ -162,8 +142,8 @@ These apply to every feature. Every piece of code must satisfy them.
 
 ### Subscription
 - See which features are free and which are premium, with explanations.
-- Subscribe via the web (Stripe) or in the app (Apple/Google IAP).
-- Premium unlocks instantly after payment on all devices.
+- Subscribe via Stripe (web).
+- Premium unlocks instantly after payment.
 - Cancellation takes effect at end of billing period; data is never deleted.
 
 ### Workout Session (free)
@@ -191,9 +171,9 @@ These apply to every feature. Every piece of code must satisfy them.
 - Recovery, progression, program, injury prevention, and nutrition advice.
 - Every recommendation includes plain-language reasoning.
 
-### Offline (premium — mobile only)
-- Session page works without internet.
-- Sets queued and synced when connection returns.
+### Offline (premium — PWA)
+- Session page works without internet on any device via PWA service worker.
+- Sets queued in IndexedDB and synced when connection returns.
 
 ---
 
@@ -315,6 +295,9 @@ GET /health
 
 ## 9. Out of Scope (for now)
 
+- Native iOS App Store / Android Play Store distribution (may come later)
+- Capacitor / React Native packaging
+- In-App Purchases (Apple/Google IAP) — Stripe web only
 - Social or sharing features
 - Video recording
 - Wearable / smartwatch integration
@@ -335,9 +318,6 @@ GET /health
 7.  Progress charts (premium — with plain-language summaries)
 8.  Motivational alerts & progression suggestions (premium)
 9.  AI advice page (premium — Claude integration with explanations)
-10. Freemium: subscription model, RevenueCat setup, premium gates, `/subscription` page
-11. Stripe integration (web payments)
-12. Offline mode (premium — PWA service worker + sync queue)
-13. Capacitor: package as iOS + Android app
-14. App Store & Play Store submission
-15. Nutrition advice (premium — Claude)
+10. Freemium: subscription model, Stripe, premium gates, `/subscription` page
+11. Offline mode (premium — PWA service worker + sync queue)
+12. Nutrition advice (premium — Claude)
