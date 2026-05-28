@@ -6,7 +6,7 @@ Do not implement these until the current build step is complete.
 ## Ideas
 
 - Custom exercise creation (name, image, muscle group)
-- User authentication (login / multiple profiles)
+- OAuth login (Google, Apple)
 - Export session history to CSV or PDF
 - Dark mode
 - Wearable / Apple Watch integration
